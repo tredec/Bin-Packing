@@ -753,7 +753,7 @@ var getZ = (ZItems) => {
     return TotalZBins;
 }
 
-var getPublicationMultiplier = (tau) => tau.isZero ? BigNumber.ONE : tau;
+var getPublicationMultiplier = (tau) => tau.isZero ? BigNumber.ONE : tau.pow(3);
 var getPublicationMultiplierFormula = (symbol) => "{" + symbol + "}";
 var getTau = () => currency.value.pow(BigNumber.from(0.1));
 var getCurrencyFromTau = (tau) => [tau.max(BigNumber.ONE).pow(10), currency.symbol];
