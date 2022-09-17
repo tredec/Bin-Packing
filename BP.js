@@ -26,7 +26,6 @@ var B5Term, B7Term, B17Term, B57Term, B97Term, B99Term;
 
 var init = () => {
     currency = theory.createCurrency();
-    currency.value = BigNumber.from("1.00001e300")
     currency2 = theory.createCurrency();
 
     ///////////////////
@@ -817,7 +816,7 @@ var getPublicationMultiplier = (tau) => tau.isZero ? BigNumber.ONE : tau;
 var getPublicationMultiplierFormula = (symbol) => "{" + symbol + "}";
 var getTau = () => currency.value.pow(BigNumber.from(0.15));
 var getCurrencyFromTau = (tau) => [tau.max(BigNumber.ONE).pow(1/0.15), currency.symbol];
-var get2DGraphValue = () => currency.value.sign * (BigNumber.ONE + currency.value.abs()).log10().toNumber();
+var get2DGraphValue = () => currency2.value.sign * (BigNumber.ONE + currency2.value.abs()).log10().toNumber();
 
 var getQ1 = (level) => Utils.getStepwisePowerSum(level, 4, 10, 0);
 var getQ2 = (level) => BigNumber.TWO.pow(level);
