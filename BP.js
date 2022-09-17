@@ -26,7 +26,7 @@ var B5Term, B7Term, B17Term, B57Term, B97Term, B99Term;
 
 var init = () => {
     currency = theory.createCurrency();
-    currency.value = BigNumber.from("1e290")
+    currency.value = BigNumber.from("1e300")
     currency2 = theory.createCurrency();
 
     ///////////////////
