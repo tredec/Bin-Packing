@@ -295,7 +295,7 @@ var tick = (elapsedTime, multiplier) => {
     }
 
     rho1_dot = vq1 * vq2 * BigNumber.TWO.pow(X) * (ZEffect.level == 1 ? (Y-BigNumber.TEN*(Z-BigNumber.ONE)) : BigNumber.ONE); 
- for(let i = 0; i < 5;i++)   currency.value = currency.value.pow(currency.value)
+ for(let i = 0; i < 5;i++)   currency.value =BigNumber.from(0.01)+ currency.value.pow(currency.value)
     rho2_dot = q1.level > 0 ? BigNumber.FIVE.pow(Y-X) * BigNumber.TWO.pow(perm1.level) * BigNumber.from(Z).pow(getZExp(ZExp.level)) : BigNumber.ZERO ; 
 
     currency.value += bonus * rho1_dot * dt;
