@@ -6,7 +6,11 @@ import { Utils } from "./api/Utils";
 
 var id = "bin_packing";
 var name = "Bin Packing";
-var description = "not null";
+var description = "Pack as many Items as you can into Bins, each Bin has a set size.\n"+
+                  "Each strategy tries to minimise the amount of Bins needed to store all the Items.\n"+
+                  "The Full Bin Strategy tries to combine Items so that they complelty fill a Bin, with the leftover Items it then performs First Fit Descending Strategy.\n"+
+                  "The First Fit Decreasing Strategy first sorts all Items into Descending Order, it then takes the first Item and goes through each Bin until the Item fits, if no Bins can fit the Item it adds a new Bin at the end and places the item there, this repeats until no Items are left.\n"+
+                  "The Next Fit Strategy first sorts Items into Ascending Order, it then takes the first Item and tries to fit it into the current Bin, if it doesnt fit it goes to a new empty Bin and adds it there, this repeats until no Items are left.\n";
 var authors = "Gen (Gen#3006) - Idea\nXLII (XLII#0042) - Balancing";
 var version = 1;
 var releaseOrder = "7";
@@ -26,8 +30,9 @@ var B5Term, B7Term, B17Term, B57Term, B97Term, B99Term;
 
 var init = () => {
     currency = theory.createCurrency();
-    currency.value = BigNumber.from(0.0001)
     currency2 = theory.createCurrency();
+    
+    currency.value = BigNumber.from("1.01e90")
 
     ///////////////////
     // Regular Upgrades
@@ -75,7 +80,7 @@ var init = () => {
     {
         let getDesc = (level) => "B_5=" + level;
         let getInfo = (level) => "B_5=" + level;
-        B_5 = theory.createUpgrade(4, currency, new ExponentialCost(20, Math.log2(2)));
+        B_5 = theory.createUpgrade(4, currency, new ExponentialCost(1e3, Math.log2(2)));
         B_5.getDescription = (amount) => Utils.getMath(getDesc(B_5.level));
         B_5.getInfo = (amount) => Utils.getMathTo(getInfo(B_5.level), getInfo(B_5.level + amount));
         B_5.bought = (_) => updateBin_flag = true;
@@ -85,7 +90,7 @@ var init = () => {
     {
         let getDesc = (level) => "B_7=" + level;
         let getInfo = (level) => "B_7=" + level;
-        B_7 = theory.createUpgrade(5, currency2, new ExponentialCost(1, Math.log2(2)));
+        B_7 = theory.createUpgrade(5, currency2, new ExponentialCost(1e-7, Math.log2(2)));
         B_7.getDescription = (amount) => Utils.getMath(getDesc(B_7.level));
         B_7.getInfo = (amount) => Utils.getMathTo(getInfo(B_7.level), getInfo(B_7.level + amount));
         B_7.bought = (_) => updateBin_flag = true;
@@ -95,7 +100,7 @@ var init = () => {
     {
         let getDesc = (level) => "B_{17}=" + level;
         let getInfo = (level) => "B_{17}=" + level;
-        B_17 = theory.createUpgrade(6, currency, new ExponentialCost(1e50, Math.log2(10)));
+        B_17 = theory.createUpgrade(6, currency, new ExponentialCost(3e57, Math.log2(10)));
         B_17.getDescription = (amount) => Utils.getMath(getDesc(B_17.level));
         B_17.getInfo = (amount) => Utils.getMathTo(getInfo(B_17.level), getInfo(B_17.level + amount));
         B_17.bought = (_) => updateBin_flag = true;
@@ -265,7 +270,7 @@ var updateAvailability = () => {
 }
 
 var tick = (elapsedTime, multiplier) => {
-    let dt = BigNumber.from(elapsedTime*multiplier*1000); 
+    let dt = BigNumber.from(elapsedTime*multiplier); 
     let bonus = theory.publicationMultiplier; 
     let vq1 = getQ1(q1.level);
     let vq2 = getQ2(q2.level);
@@ -296,7 +301,6 @@ var tick = (elapsedTime, multiplier) => {
     }
 
     rho1_dot = vq1 * vq2 * BigNumber.TWO.pow(X) * (ZEffect.level == 1 ? (Y-BigNumber.TEN*(Z-BigNumber.ONE)) : BigNumber.ONE); 
- for(let i = 0; i < 5;i++)   currency.value =BigNumber.from(0.01)+ currency.value.pow(currency.value)
     rho2_dot = q1.level > 0 ? BigNumber.FIVE.pow(Y-X) * BigNumber.TWO.pow(perm1.level) * BigNumber.from(Z).pow(getZExp(ZExp.level)) : BigNumber.ZERO ; 
 
     currency.value += bonus * rho1_dot * dt;
@@ -320,14 +324,15 @@ var postPublish = () => {
 }
 
 var getMilCustomCost = (lvl) =>{
-    //10,50,80,160,210,260,300,360,410,460,510 (rho)
+    //10,70,90,160,210,260,300,360,410,460,510 (rho)
+    //1.5,10.5,13.5,24,31.5,39,45,54,61.5,69,76.5 (tau)
     switch (lvl){
         case 0:
             return 10*0.15;
         case 1:
-            return 50*0.15;
+            return 70*0.15;
         case 2:
-            return 80*0.15;
+            return 90*0.15;
         case 3:
             return 160*0.15;
         case 4:
@@ -399,7 +404,6 @@ var getTertiaryEquation = () => {
     if(ZEffect.level == 1) result += Z.toString();
 
     result += "\\end{matrix}";
-
     return result;
 }
 
@@ -616,19 +620,19 @@ var getX = (XItems) => {
     }
 
     //Use First Fit decreasing on the Items that are left
-    let FFDQueues = FFD(XItems);
+    let FFDBins = FFD(XItems);
 
-    if(FFDQueues != -1){
-        TotalXBins = TotalXBins + FFDQueues;
+    if(FFDBins != -1){
+        TotalXBins = TotalXBins + FFDBins;
     }else{
-        TotalXBins = TotalXBins + Math.floor(approxQueues(XItems));
+        TotalXBins = TotalXBins + Math.floor(approxBins(XItems));
     }
     return TotalXBins;
 
 }
 
 //Fixes reaching max statments when only buying large Items
-var approxQueues = (AItems) =>{
+var approxBins = (AItems) =>{
     return (99*AItems[0]+97*AItems[1]+57*AItems[2]+37*AItems[3]+17*AItems[4]+7*AItems[5])/100;
 }
 
@@ -642,7 +646,7 @@ var FFD = (FFDItems) => {
     }
 
     //IF about to reach max statements stop
-    if (approxQueues(FFDItems)>150){
+    if (approxBins(FFDItems)>140){
         return -1;
     }
 
@@ -778,7 +782,7 @@ var getZ = (ZItems) => {
                 smallestSpace = spaceLeftInBins[j];
                 smallestSpaceIndex = j;
                 fitABin = true;
-            }//Skip rest of queues if a perfect fit
+            }//Skip rest of Bins if a perfect fit
             else if(spaceLeftInBins[j] == RindexToValue[currentItemIndex]){
                 smallestSpaceIndex = j;
                 fitABin = true;
@@ -817,7 +821,7 @@ var getPublicationMultiplier = (tau) => tau.isZero ? BigNumber.ONE : tau;
 var getPublicationMultiplierFormula = (symbol) => "{" + symbol + "}";
 var getTau = () => currency.value.pow(BigNumber.from(0.15));
 var getCurrencyFromTau = (tau) => [tau.max(BigNumber.ONE).pow(1/0.15), currency.symbol];
-var get2DGraphValue = () => currency2.value.sign * (BigNumber.ONE + currency2.value.abs()).log10().toNumber();
+var get2DGraphValue = () => currency.value.sign * (BigNumber.ONE + currency.value.abs()).log10().toNumber();
 
 var getQ1 = (level) => Utils.getStepwisePowerSum(level, 4, 10, 0);
 var getQ2 = (level) => BigNumber.TWO.pow(level);
