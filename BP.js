@@ -32,7 +32,7 @@ var init = () => {
     currency = theory.createCurrency();
     currency2 = theory.createCurrency();
     
-    currency.value = BigNumber.from("1.01e90")
+    currency.value = BigNumber.from("1.01e160")
 
     ///////////////////
     // Regular Upgrades
